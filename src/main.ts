@@ -33,7 +33,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 const lebanonPolygon = mergePolygons(lebanonDistricts, 0.01)
 const lebanon = get3DObjectFromPolygon(lebanonPolygon.geometry);
 
-const geometry = new GlobeGeometry(0.1, 0.1, 4.5, 37, 32.5, 35);
+// const geometry = new GlobeGeometry(0.1, 0.1, 34.5, 37, 32.5, 35);
+const geometry = new GlobeGeometry(1, 1);
 const material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.1, side: THREE.BackSide });
 const globe = new THREE.Mesh(geometry, material);
 
