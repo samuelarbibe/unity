@@ -1,0 +1,27 @@
+{
+  "name": "unity",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/earcut": "^2.1.2",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  },
+  "dependencies": {
+    "@math.gl/core": "^3.6.3",
+    "@math.gl/geospatial": "^3.6.3",
+    "@turf/turf": "^6.5.0",
+    "@turf/union": "^6.5.0",
+    "@types/three": "^0.156.0",
+    "earcut": "^2.2.4",
+    "three": "^0.157.0",
+    "topojson-client": "^3.1.0",
+    "worldwindjs": "^1.9.5"
+  }
+}
