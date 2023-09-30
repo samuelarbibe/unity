@@ -1,18 +1,11 @@
-import * as turf from '@turf/turf'
-import { Ellipsoid } from '@math.gl/geospatial';
 import earcut from 'earcut'
-import { BufferGeometry, Line, LineBasicMaterial, LineSegments, Mesh, Object3D, Raycaster, Vector3 } from 'three'
+import * as turf from '@turf/turf'
 import { toRadians } from '@math.gl/core';
+import { Ellipsoid } from '@math.gl/geospatial';
+import { BufferGeometry, Line, LineBasicMaterial, LineSegments, Mesh, Object3D, Raycaster, Vector3 } from 'three'
 
 export const METERS_PER_KM = 1000
 export const METERS_PER_UNIT = 100_000
-
-type FrustumFrame = {
-  topRight: Vector3
-  bottomRight: Vector3
-  topLeft: Vector3
-  bottomLeft: Vector3
-}
 
 export function mergePolygons(featureCollection: turf.FeatureCollection<turf.Polygon>, buffer: number) {
   return featureCollection.features
@@ -26,41 +19,37 @@ export function mergePolygons(featureCollection: turf.FeatureCollection<turf.Pol
     })
 }
 
-export function lngLatAltToVector([lng = 0, lat = 0, alt = 0]: turf.Position) {
-  return new Vector3(...Ellipsoid.WGS84.cartographicToCartesian([lng, lat, alt])).divideScalar(METERS_PER_UNIT)
+export function lngLatAltToVector([lng = 0, lat = 0, alt = 0]: turf.Position, result: Vector3 = new Vector3()) {
+  const position = Ellipsoid.WGS84.cartographicToCartesian([lng, lat, alt])
+  result.set(position[0], position[1], position[2]).divideScalar(METERS_PER_UNIT)
+
+  return result
 }
 
-function slerpVectors(from: Vector3, to: Vector3, factor: number) {
+function slerpVectors(from: Vector3, to: Vector3, factor: number, result: Vector3 = new Vector3()) {
   const vectorA = from.clone().normalize();
   const vectorB = to.clone().normalize();
 
-  // Calculate the angle between the vectors
   const dot = vectorA.dot(vectorB);
   const theta = Math.acos(Math.min(1, Math.max(-1, dot)));
 
-  // Determine the length of the interpolated vector
   const lengthFrom = from.length();
   const lengthTo = to.length();
   const interpolatedLength = lengthFrom + (lengthTo - lengthFrom) * factor;
 
-  // Perform Slerp
-  const interpolatedVector = new Vector3();
-  interpolatedVector.copy(vectorA).multiplyScalar(Math.sin((1 - factor) * theta));
+  result.copy(vectorA).multiplyScalar(Math.sin((1 - factor) * theta));
   const tempVector = vectorB.clone().multiplyScalar(Math.sin(factor * theta));
-  interpolatedVector.add(tempVector);
+  result.add(tempVector);
 
-  // Set the length of the interpolated vector
-  interpolatedVector.normalize().multiplyScalar(interpolatedLength);
+  result.normalize().multiplyScalar(interpolatedLength);
 
-  return interpolatedVector
+  return result
 }
 
-function getSlerpedVectors(from: Vector3, to: Vector3, slerpDistance: number = Infinity) {
+function getSlerpedVectors(from: Vector3, to: Vector3, slerpDistance: number = Infinity, result: Vector3[] = []) {
   const distance = from.distanceTo(to) * METERS_PER_UNIT
 
   const slerpStep = slerpDistance / distance
-
-  const result: Vector3[] = []
 
   result.push(from)
 
@@ -74,8 +63,7 @@ function getSlerpedVectors(from: Vector3, to: Vector3, slerpDistance: number = I
   return result
 }
 
-function getStitchedVectors(vectors: Vector3[]) {
-  const result: Vector3[] = []
+function getStitchedVectors(vectors: Vector3[], result: Vector3[] = []) {
   for (let i = 0; i < vectors.length - 1; i++) {
     result.push(vectors[i], vectors[i + 1])
   }
@@ -83,36 +71,14 @@ function getStitchedVectors(vectors: Vector3[]) {
   return result
 }
 
-// export function createEarthMesh(gap: number) {
-//   const lineStrings = []
-//   for (let i = -180; i < 180; i += gap) {
-//     const lngLineString = []
-//     for (let j = -90; j <= 90; j += gap) {
-//       lngLineString.push([i, j])
-//     }
-//     lineStrings.push(lngLineString)
-//   }
-
-//   for (let j = -90 + gap; j < 90; j += gap) {
-//     const latLineString = []
-//     for (let i = -180; i <= 180; i += gap) {
-//       latLineString.push([i, j])
-//     }
-//     lineStrings.push(latLineString)
-//   }
-
-//   return turf.multiLineString(lineStrings)
-// }
-
 function getVectorsFromCoordinates(
   coordinates: turf.Position[],
   options: {
     slerpDistance?: number,
     stitchVectors?: boolean
-  } = {}
+  } = {},
+  result: Vector3[] = []
 ) {
-  const result: Vector3[] = []
-
   for (let i = 0; i < coordinates.length - 1; i++) {
     const from = lngLatAltToVector(coordinates[i])
     const to = lngLatAltToVector(coordinates[i + 1])
@@ -179,16 +145,16 @@ export function get3DObjectFromPolygon(polygon: turf.Polygon, fill: boolean = fa
   }
 }
 
-export function getPointOnLine(line: Line, index: number) {
+export function getPointOnLine(line: Line, index: number, result: Vector3 = new Vector3()) {
   const dimensions = 3
   const points = Array.from(line.geometry.attributes.position.array.slice(dimensions * index, dimensions * index + dimensions))
 
-  return new Vector3(...points)
+  result.set(points[0], points[1], points[2])
+
+  return result
 }
 
-// alpha: vertical opening
-// beta: horizontal opening
-export function createFrustumFrame(from: Vector3, to: Vector3, alpha: number, beta: number): FrustumFrame {
+export function createFrustumFrame(from: Vector3, to: Vector3, alpha: number, beta: number) {
   const yAxis = new Vector3(...Ellipsoid.WGS84.geodeticSurfaceNormal(from.toArray())).normalize()
   const center = to.clone().sub(from).normalize()
 
@@ -207,46 +173,25 @@ export function createFrustumFrame(from: Vector3, to: Vector3, alpha: number, be
   }
 }
 
-export function get3DObjectFromFrustumFrame(from: Vector3, frustumFrame: FrustumFrame) {
-  const material = new LineBasicMaterial({
-    color: 0xff0000
-  });
+export function getFrustumIntersection(
+  from: Vector3,
+  to: Vector3,
+  alpha: number,
+  beta: number,
+  object: Object3D,
+  intersectionPoints: Vector3[] = []
+) {
+  const raycaster = new Raycaster()
+  const frustumFrame = createFrustumFrame(from, to, alpha, beta)
 
-  const geometry = new BufferGeometry().setFromPoints([
-    from, from.clone().add(frustumFrame.topRight),
-    from, from.clone().add(frustumFrame.bottomRight),
-    from, from.clone().add(frustumFrame.topLeft),
-    from, from.clone().add(frustumFrame.bottomLeft),
-  ]);
+  raycaster.set(from, frustumFrame.topRight.clone().normalize())
+  intersectionPoints.push(raycaster.intersectObject(object)[0].point)
+  raycaster.set(from, frustumFrame.bottomRight.clone().normalize())
+  intersectionPoints.push(raycaster.intersectObject(object)[0].point)
+  raycaster.set(from, frustumFrame.bottomLeft.clone().normalize())
+  intersectionPoints.push(raycaster.intersectObject(object)[0].point)
+  raycaster.set(from, frustumFrame.topLeft.clone().normalize())
+  intersectionPoints.push(raycaster.intersectObject(object)[0].point)
 
-  return new LineSegments(geometry, material);
-}
-
-export function get3DObjectFromFrustumIntersection(from: Vector3, frustumFrame: FrustumFrame, object: Object3D) {
-  const topRightRaycaster = new Raycaster(from, frustumFrame.topRight.clone().normalize())
-  const bottomRightRaycaster = new Raycaster(from, frustumFrame.bottomRight.clone().normalize())
-  const topLeftRaycaster = new Raycaster(from, frustumFrame.topLeft.clone().normalize())
-  const bottomLeftRaycaster = new Raycaster(from, frustumFrame.bottomLeft.clone().normalize())
-
-  const topRightIntersect = topRightRaycaster.intersectObject(object)
-  const bottomRightIntersect = bottomRightRaycaster.intersectObject(object)
-  const topLeftIntersect = topLeftRaycaster.intersectObject(object)
-  const bottomLeftIntersect = bottomLeftRaycaster.intersectObject(object)
-
-  let geometry
-
-  if (!topRightIntersect.length || !bottomLeftIntersect.length || !topRightIntersect.length || !bottomLeftIntersect.length) {
-    geometry = new BufferGeometry()
-  } else {
-    geometry = new BufferGeometry().setFromPoints([
-      topRightIntersect[0].point,
-      bottomRightIntersect[0].point,
-      bottomLeftIntersect[0].point,
-      topLeftIntersect[0].point,
-      topRightIntersect[0].point,
-    ]);
-  }
-  const material = new LineBasicMaterial({ color: 0xff0000 });
-
-  return new Line(geometry, material);
+  return intersectionPoints
 }
