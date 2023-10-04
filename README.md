@@ -1,7 +1,8 @@
 # Unity - [demo](https://unity-eta.vercel.app/)
----
-Unity is an Airborne/Satellite camera projection simulator.  
-It can be used to simulate the projected vieweing polygon on the surface of the earth, given a set of camera paremeters.  
+> Airborne sensor projection simulator
+
+Unity is an Airborne/Satellite sensor projection simulator.  
+It can be used to simulate the projected vieweing polygon on the surface of the earth, given a set of sensor paremeters.  
 
 ### How does it work?
 Unity uses [Three.js](https://threejs.org/) to perform rendering and vector manipulation.  
