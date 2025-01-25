@@ -5,7 +5,11 @@ import { Ellipsoid } from "@math.gl/geospatial";
 import { toRadians } from "@math.gl/core";
 
 export class Sensor {
-  constructor(private alpha: number, private elevationAngle: number) {}
+  private raycaster: THREE.Raycaster;
+
+  constructor(private alpha: number, private elevationAngle: number) {
+    this.raycaster = new THREE.Raycaster();
+  }
 
   generateProjections(
     globe: THREE.Object3D,
@@ -13,9 +17,6 @@ export class Sensor {
     verticalSamplingRate: number,
     horizontalSamplingRate: number
   ) {
-    const raycaster = new THREE.Raycaster();
-    raycaster.far = 10;
-
     const lineObject = get3DObjectFromLineString(lane, verticalSamplingRate);
     const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
@@ -50,9 +51,9 @@ export class Sensor {
         a += horizontalSamplingRate
       ) {
         lookDir = lookDir.copy(nadir).applyAxisAngle(movingDir, toRadians(-a));
-        raycaster.set(currentPos, lookDir);
+        this.raycaster.set(currentPos, lookDir);
 
-        const target = raycaster.intersectObject(globe)[0]?.point;
+        const target = this.raycaster.intersectObject(globe)[0]?.point;
 
         if (target) {
           projections.push([currentPos.clone(), target]);

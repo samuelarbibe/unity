@@ -16,6 +16,23 @@ import { DEM } from "./dem.ts";
 import { Sensor } from "./sensor.ts";
 import { Simulation } from "./simulation.ts";
 
+import {
+  computeBoundsTree,
+  disposeBoundsTree,
+  computeBatchedBoundsTree,
+  disposeBatchedBoundsTree,
+  acceleratedRaycast,
+} from "three-mesh-bvh";
+
+// Add the extension functions
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
+THREE.BatchedMesh.prototype.computeBoundsTree = computeBatchedBoundsTree;
+THREE.BatchedMesh.prototype.disposeBoundsTree = disposeBatchedBoundsTree;
+THREE.BatchedMesh.prototype.raycast = acceleratedRaycast;
+
 async function run() {
   THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
 
@@ -66,6 +83,8 @@ async function run() {
     34.5,
     dem
   );
+
+  globeGeometry.computeBoundsTree();
 
   const globeMaterial = new THREE.MeshBasicMaterial({
     color: 0x333333,
