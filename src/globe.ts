@@ -1,8 +1,8 @@
 // @ts-nocheck
 
 import { BufferGeometry, Float32BufferAttribute, Vector3 } from "three";
-import { lngLatAltToVector } from "../utils/conversions";
-import { DEM } from "../utils/height";
+import { lngLatAltToVector } from "./utils/conversions";
+import { DEM } from "./dem";
 
 class GlobeGeometry extends BufferGeometry {
   constructor(
