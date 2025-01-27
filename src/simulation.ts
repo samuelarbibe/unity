@@ -1,24 +1,16 @@
 import { LineString } from "@turf/turf";
-import { METERS_PER_KM } from "./utils/consts";
 import * as THREE from "three";
-import { Sensor } from "./sensor";
+import { Sensor } from "./sensors/sensor";
 
 export class Simulation {
   constructor(
     private globe: THREE.Object3D,
     private sensor: Sensor,
-    private lane: LineString,
-    private verticalSamplingRate: number = METERS_PER_KM * 1,
-    private horizontalSamplingRate: number = 1
+    private lane: LineString
   ) {}
 
   run(scene: THREE.Scene) {
-    const projections = this.sensor.generateProjections(
-      this.globe,
-      this.lane,
-      this.verticalSamplingRate,
-      this.horizontalSamplingRate
-    );
+    const projections = this.sensor.generateProjections(this.globe, this.lane);
 
     // const projectionLinesPositions = projections.reduce<THREE.Vector3[]>(
     //   (acc, curr) => {

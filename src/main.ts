@@ -13,7 +13,7 @@ import { METERS_PER_KM } from "./utils/consts.ts";
 import { lngLatAltToVector } from "./utils/conversions.ts";
 import { mergePolygons } from "./utils/geometry.ts";
 import { DEM } from "./dem.ts";
-import { Sensor } from "./sensor.ts";
+// import { Sensor } from "./sensors/sensor.ts";
 import { Simulation } from "./simulation.ts";
 
 import {
@@ -23,6 +23,8 @@ import {
   disposeBatchedBoundsTree,
   acceleratedRaycast,
 } from "three-mesh-bvh";
+// import { AngleSensor } from "./sensors/angle-sensor.ts";
+import { NearFarSensor } from "./sensors/near-far-sensor.ts";
 
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -75,8 +77,8 @@ async function run() {
   await dem.loadFromFile("DEM.tif");
 
   const globeGeometry = new GlobeGeometry(
-    0.005,
-    0.005,
+    0.002,
+    0.002,
     35.7,
     36.2,
     34.1,
@@ -97,8 +99,8 @@ async function run() {
 
   // lane
   const laneGeoJSON = lineString([
-    [35.697489072151996, 34.32605282423867, 3000],
-    [35.820916382160334, 34.47018642182205, 3000],
+    [35.81173966438041, 34.223477239036384, 3000],
+    [35.814689800345064, 34.49327712216213, 3000],
   ]);
   const slerpDistance = METERS_PER_KM * 1;
   const lane = get3DObjectFromLineString(laneGeoJSON.geometry, slerpDistance);
@@ -115,17 +117,20 @@ async function run() {
     renderer.render(scene, camera);
   });
 
-  // simulation
-  const sensor = new Sensor(10, 85);
-  const simulation = new Simulation(
-    globe,
-    sensor,
-    laneGeoJSON.geometry,
-    METERS_PER_KM * 0.3,
-    0.1
-  );
+  // // simulation
+  // const sensor = new AngleSensor(10, 85, 0.3 * METERS_PER_KM, 0.1);
+  // const simulation = new Simulation(globe, sensor, laneGeoJSON.geometry);
 
-  simulation.run(scene);
+  // simulation.run(scene);
+
+  // simulation
+  const sensor2 = new NearFarSensor(
+    7 * METERS_PER_KM,
+    15 * METERS_PER_KM,
+    0.1 * METERS_PER_KM
+  );
+  const simulation2 = new Simulation(globe, sensor2, laneGeoJSON.geometry);
+  simulation2.run(scene);
 
   function animate() {
     requestAnimationFrame(animate);

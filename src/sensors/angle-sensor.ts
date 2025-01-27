@@ -1,28 +1,28 @@
 import { LineString } from "@turf/turf";
-import { get3DObjectFromLineString, getPointOnLine } from "./utils/3d";
+import { get3DObjectFromLineString, getPointOnLine } from "../utils/3d";
 import * as THREE from "three";
-import { Ellipsoid } from "@math.gl/geospatial";
 import { toRadians } from "@math.gl/core";
+import { Sensor } from "./sensor";
+import { geodeticSurfaceNormal } from "../utils/conversions";
 
-export class Sensor {
-  private raycaster: THREE.Raycaster;
-
-  constructor(private alpha: number, private elevationAngle: number) {
-    this.raycaster = new THREE.Raycaster();
+export class AngleSensor extends Sensor {
+  constructor(
+    private alpha: number,
+    private elevationAngle: number,
+    private verticalSamplingRate: number,
+    private horizontalSamplingRate: number
+  ) {
+    super();
   }
 
-  generateProjections(
-    globe: THREE.Object3D,
-    lane: LineString,
-    verticalSamplingRate: number,
-    horizontalSamplingRate: number
-  ) {
-    const lineObject = get3DObjectFromLineString(lane, verticalSamplingRate);
+  generateProjections(globe: THREE.Object3D, lane: LineString) {
+    const lineObject = get3DObjectFromLineString(
+      lane,
+      this.verticalSamplingRate
+    );
     const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
     let nadir = new THREE.Vector3();
-    let cartesianPos = [0, 0, 0];
-    let surfaceNormal = [0, 0, 0];
     let nextPos = new THREE.Vector3();
     let currentPos = new THREE.Vector3();
     let movingDir = new THREE.Vector3();
@@ -37,18 +37,12 @@ export class Sensor {
       nextPos = getPointOnLine(lineObject, i + 1, nextPos);
 
       movingDir = movingDir.copy(nextPos).sub(currentPos).normalize();
-
-      cartesianPos = currentPos.toArray(cartesianPos);
-      surfaceNormal = Ellipsoid.WGS84.geodeticSurfaceNormal(
-        cartesianPos,
-        surfaceNormal
-      );
-      nadir = nadir.fromArray(surfaceNormal).negate();
+      nadir = geodeticSurfaceNormal(currentPos).negate();
 
       for (
         let a = this.elevationAngle - this.alpha;
         a <= this.elevationAngle + this.alpha;
-        a += horizontalSamplingRate
+        a += this.horizontalSamplingRate
       ) {
         lookDir = lookDir.copy(nadir).applyAxisAngle(movingDir, toRadians(-a));
         this.raycaster.set(currentPos, lookDir);

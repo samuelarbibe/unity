@@ -1,11 +1,53 @@
-import { Ellipsoid } from "@math.gl/geospatial"
-import { Vector3 } from "three"
-import * as turf from "@turf/turf"
-import { METERS_PER_UNIT } from "./consts"
+import { Ellipsoid } from "@math.gl/geospatial";
+import { Vector3 } from "three";
+import * as turf from "@turf/turf";
+import { METERS_PER_UNIT } from "./consts";
 
-export function lngLatAltToVector([lng = 0, lat = 0, alt = 0]: turf.Position, result: Vector3 = new Vector3()) {
-  const position = Ellipsoid.WGS84.cartographicToCartesian([lng, lat, alt])
-  result.set(position[0], position[1], position[2]).divideScalar(METERS_PER_UNIT)
+export function lngLatAltToVector(
+  [lng = 0, lat = 0, alt = 0]: turf.Position,
+  result: Vector3 = new Vector3()
+) {
+  const position = Ellipsoid.WGS84.cartographicToCartesian([lng, lat, alt]);
+  result
+    .set(position[0], position[1], position[2])
+    .divideScalar(METERS_PER_UNIT);
 
-  return result
+  return result;
+}
+
+export function vectorToLngLatAlt(
+  vector: Vector3,
+  result: turf.Position = [0, 0, 0]
+) {
+  const position = Ellipsoid.WGS84.cartesianToCartographic([
+    vector.x,
+    vector.y,
+    vector.z,
+  ]);
+  result[0] = position[0];
+  result[1] = position[1];
+  result[2] = position[2];
+
+  return result;
+}
+export function vectorOnGeodeticSurface(
+  vector: Vector3,
+  result: Vector3 = new Vector3()
+) {
+  const position = Ellipsoid.WGS84.scaleToGeodeticSurface(vector.toArray());
+  result
+    .set(position[0], position[1], position[2])
+    .divideScalar(METERS_PER_UNIT);
+
+  return result;
+}
+
+export function geodeticSurfaceNormal(
+  vector: Vector3,
+  result: Vector3 = new Vector3()
+) {
+  const normal = Ellipsoid.WGS84.geodeticSurfaceNormal(vector.toArray());
+  result.set(normal[0], normal[1], normal[2]);
+
+  return result;
 }
