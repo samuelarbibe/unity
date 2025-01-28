@@ -1,16 +1,11 @@
-import { LineString } from "@turf/turf";
 import * as THREE from "three";
 import { Sensor } from "./sensors/sensor";
 
 export class Simulation {
-  constructor(
-    private globe: THREE.Object3D,
-    private sensor: Sensor,
-    private lane: LineString
-  ) {}
+  constructor(private globe: THREE.Object3D, private sensor: Sensor) {}
 
   run(scene: THREE.Scene) {
-    const projections = this.sensor.generateProjections(this.globe, this.lane);
+    const projections = this.sensor.generateProjections(this.globe);
 
     // const projectionLinesPositions = projections.reduce<THREE.Vector3[]>(
     //   (acc, curr) => {

@@ -4,12 +4,30 @@ import {
   LineBasicMaterial,
   LineSegments,
   Mesh,
+  MeshBasicMaterial,
+  SphereGeometry,
   Vector3,
 } from "three";
 import * as turf from "@turf/turf";
 import * as earcut from "earcut";
 import { getVectorsFromCoordinates } from "./vectors";
 import { lngLatAltToVector } from "./conversions";
+import { METERS_PER_UNIT } from "./consts";
+
+export function get3DObjectFromPoint(point: turf.Point) {
+  const vector = lngLatAltToVector(point.coordinates);
+  const geometry = new SphereGeometry(100 / METERS_PER_UNIT);
+
+  const material = new MeshBasicMaterial({
+    color: 0xff0000,
+  });
+
+  const mesh = new Mesh(geometry, material);
+
+  mesh.position.set(vector.x, vector.y, vector.z);
+
+  return mesh;
+}
 
 export function get3DObjectFromLineString(
   lineString: turf.LineString,

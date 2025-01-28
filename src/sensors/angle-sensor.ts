@@ -7,6 +7,7 @@ import { geodeticSurfaceNormal } from "../utils/conversions";
 
 export class AngleSensor extends Sensor {
   constructor(
+    private lane: LineString,
     private alpha: number,
     private elevationAngle: number,
     private verticalSamplingRate: number,
@@ -15,9 +16,9 @@ export class AngleSensor extends Sensor {
     super();
   }
 
-  generateProjections(globe: THREE.Object3D, lane: LineString) {
+  generateProjections(globe: THREE.Object3D) {
     const lineObject = get3DObjectFromLineString(
-      lane,
+      this.lane,
       this.verticalSamplingRate
     );
     const projections: [THREE.Vector3, THREE.Vector3][] = [];

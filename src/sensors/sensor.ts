@@ -1,4 +1,3 @@
-import { LineString } from "@turf/turf";
 import * as THREE from "three";
 
 export abstract class Sensor {
@@ -9,7 +8,6 @@ export abstract class Sensor {
   }
 
   abstract generateProjections(
-    globe: THREE.Object3D,
-    lane: LineString
+    globe: THREE.Object3D
   ): [THREE.Vector3, THREE.Vector3][];
 }

@@ -10,6 +10,7 @@ import {
 
 export class NearFarSensor extends Sensor {
   constructor(
+    private lane: LineString,
     private near: number,
     private far: number,
     private samplingRate: number
@@ -17,8 +18,8 @@ export class NearFarSensor extends Sensor {
     super();
   }
 
-  generateProjections(globe: THREE.Object3D, lane: LineString) {
-    const lineObject = get3DObjectFromLineString(lane, this.samplingRate);
+  generateProjections(globe: THREE.Object3D) {
+    const lineObject = get3DObjectFromLineString(this.lane, this.samplingRate);
     const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
     let nadir = new THREE.Vector3();

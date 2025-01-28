@@ -1,6 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
-import { lineString } from "@turf/turf";
+import { lineString, point } from "@turf/turf";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import lebanonDistricts from "../data/lebanon.ts";
@@ -8,12 +8,12 @@ import { GlobeGeometry } from "./globe.ts";
 import {
   get3DObjectFromPolygon,
   get3DObjectFromLineString,
+  get3DObjectFromPoint,
 } from "./utils/3d.ts";
 import { METERS_PER_KM } from "./utils/consts.ts";
 import { lngLatAltToVector } from "./utils/conversions.ts";
 import { mergePolygons } from "./utils/geometry.ts";
 import { DEM } from "./dem.ts";
-// import { Sensor } from "./sensors/sensor.ts";
 import { Simulation } from "./simulation.ts";
 
 import {
@@ -23,8 +23,9 @@ import {
   disposeBatchedBoundsTree,
   acceleratedRaycast,
 } from "three-mesh-bvh";
-// import { AngleSensor } from "./sensors/angle-sensor.ts";
+import { AngleSensor } from "./sensors/angle-sensor.ts";
 import { NearFarSensor } from "./sensors/near-far-sensor.ts";
+import { PointSensor } from "./sensors/point-sensor.ts";
 
 // Add the extension functions
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -97,15 +98,6 @@ async function run() {
   const globe = new THREE.Mesh(globeGeometry, globeMaterial);
   scene.add(globe);
 
-  // lane
-  const laneGeoJSON = lineString([
-    [35.81173966438041, 34.223477239036384, 3000],
-    [35.814689800345064, 34.49327712216213, 3000],
-  ]);
-  const slerpDistance = METERS_PER_KM * 1;
-  const lane = get3DObjectFromLineString(laneGeoJSON.geometry, slerpDistance);
-  scene.add(lane);
-
   // axes
   const axesHelper = new THREE.AxesHelper(lngLatAltToVector([0, 0, 0]).x);
   scene.add(axesHelper);
@@ -117,20 +109,59 @@ async function run() {
     renderer.render(scene, camera);
   });
 
-  // // simulation
-  // const sensor = new AngleSensor(10, 85, 0.3 * METERS_PER_KM, 0.1);
-  // const simulation = new Simulation(globe, sensor, laneGeoJSON.geometry);
+  // simulation 1
+  const laneGeoJSON = lineString([
+    [35.81173966438041, 34.223477239036384, 3000],
+    [35.814689800345064, 34.49327712216213, 3000],
+  ]);
+  const lane1 = get3DObjectFromLineString(
+    laneGeoJSON.geometry,
+    METERS_PER_KM * 1
+  );
+  scene.add(lane1);
 
-  // simulation.run(scene);
+  const sensor1 = new AngleSensor(
+    laneGeoJSON.geometry,
+    10,
+    85,
+    0.3 * METERS_PER_KM,
+    0.1
+  );
+  const simulation1 = new Simulation(globe, sensor1);
+  simulation1.run(scene);
+  //
 
-  // simulation
+  // simulation 2
+  const lane2GeoJSON = lineString([
+    [35.872580014743505, 34.12832462549051, 5000],
+    [35.875549597317956, 34.19473037685394, 5000],
+  ]);
+  const lane2 = get3DObjectFromLineString(
+    lane2GeoJSON.geometry,
+    METERS_PER_KM * 1
+  );
+  scene.add(lane2);
+
   const sensor2 = new NearFarSensor(
+    lane2GeoJSON.geometry,
     7 * METERS_PER_KM,
     15 * METERS_PER_KM,
     0.1 * METERS_PER_KM
   );
-  const simulation2 = new Simulation(globe, sensor2, laneGeoJSON.geometry);
+  const simulation2 = new Simulation(globe, sensor2);
   simulation2.run(scene);
+  //
+
+  // simulation 3
+  const point3 = point([35.78206410711991, 34.15878030223702, 3000]);
+  const pointObject = get3DObjectFromPoint(point3.geometry);
+
+  scene.add(pointObject);
+
+  const sensor3 = new PointSensor(point3.geometry, 0, 90, 20, 45, 0.5, 0.5);
+  const simulation3 = new Simulation(globe, sensor3);
+  simulation3.run(scene);
+  //
 
   function animate() {
     requestAnimationFrame(animate);
