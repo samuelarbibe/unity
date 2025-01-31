@@ -1,9 +1,14 @@
 import { Vector3 } from "three";
-import * as turf from "@turf/turf";
 import { lngLatAltToVector } from "./conversions";
 import { METERS_PER_UNIT } from "./consts";
+import { Position } from "geojson";
 
-export function getSlerpedVector(from: Vector3, to: Vector3, factor: number, result: Vector3 = new Vector3()) {
+export function getSlerpedVector(
+  from: Vector3,
+  to: Vector3,
+  factor: number,
+  result: Vector3 = new Vector3()
+) {
   const vectorA = from.clone().normalize();
   const vectorB = to.clone().normalize();
 
@@ -20,53 +25,58 @@ export function getSlerpedVector(from: Vector3, to: Vector3, factor: number, res
 
   result.normalize().multiplyScalar(interpolatedLength);
 
-  return result
+  return result;
 }
 
-export function getSlerpedVectors(from: Vector3, to: Vector3, slerpDistance: number = Infinity, result: Vector3[] = []) {
-  const distance = from.distanceTo(to) * METERS_PER_UNIT
+export function getSlerpedVectors(
+  from: Vector3,
+  to: Vector3,
+  slerpDistance: number = Infinity,
+  result: Vector3[] = []
+) {
+  const distance = from.distanceTo(to) * METERS_PER_UNIT;
 
-  const slerpStep = slerpDistance / distance
+  const slerpStep = slerpDistance / distance;
 
-  result.push(from)
+  result.push(from);
 
   for (let factor = slerpStep; factor < 1; factor += slerpStep) {
-    const slerpedVector = getSlerpedVector(from, to, factor)
-    result.push(slerpedVector)
+    const slerpedVector = getSlerpedVector(from, to, factor);
+    result.push(slerpedVector);
   }
 
-  result.push(to)
+  result.push(to);
 
-  return result
+  return result;
 }
 
 export function getStitchedVectors(vectors: Vector3[], result: Vector3[] = []) {
   for (let i = 0; i < vectors.length - 1; i++) {
-    result.push(vectors[i], vectors[i + 1])
+    result.push(vectors[i], vectors[i + 1]);
   }
 
-  return result
+  return result;
 }
 
 export function getVectorsFromCoordinates(
-  coordinates: turf.Position[],
+  coordinates: Position[],
   options: {
-    slerpDistance?: number,
-    stitchVectors?: boolean
+    slerpDistance?: number;
+    stitchVectors?: boolean;
   } = {},
   result: Vector3[] = []
 ) {
   for (let i = 0; i < coordinates.length - 1; i++) {
-    const from = lngLatAltToVector(coordinates[i])
-    const to = lngLatAltToVector(coordinates[i + 1])
+    const from = lngLatAltToVector(coordinates[i]);
+    const to = lngLatAltToVector(coordinates[i + 1]);
 
-    const slerpedVectors = getSlerpedVectors(from, to, options.slerpDistance)
+    const slerpedVectors = getSlerpedVectors(from, to, options.slerpDistance);
     if (options.stitchVectors) {
-      result.push(...getStitchedVectors(slerpedVectors))
+      result.push(...getStitchedVectors(slerpedVectors));
     } else {
-      result.push(...slerpedVectors)
+      result.push(...slerpedVectors);
     }
   }
 
-  return result
+  return result;
 }

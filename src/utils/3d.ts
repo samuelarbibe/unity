@@ -8,13 +8,12 @@ import {
   SphereGeometry,
   Vector3,
 } from "three";
-import * as turf from "@turf/turf";
-import * as earcut from "earcut";
 import { getVectorsFromCoordinates } from "./vectors";
 import { lngLatAltToVector } from "./conversions";
 import { METERS_PER_UNIT } from "./consts";
+import { LineString, MultiLineString, Point, Polygon } from "geojson";
 
-export function get3DObjectFromPoint(point: turf.Point) {
+export function get3DObjectFromPoint(point: Point) {
   const vector = lngLatAltToVector(point.coordinates);
   const geometry = new SphereGeometry(100 / METERS_PER_UNIT);
 
@@ -30,7 +29,7 @@ export function get3DObjectFromPoint(point: turf.Point) {
 }
 
 export function get3DObjectFromLineString(
-  lineString: turf.LineString,
+  lineString: LineString,
   slerpDistance?: number
 ) {
   const vectors = getVectorsFromCoordinates(lineString.coordinates, {
@@ -46,7 +45,7 @@ export function get3DObjectFromLineString(
 }
 
 export function get3DObjectFromMultiLineString(
-  multiLineString: turf.MultiLineString,
+  multiLineString: MultiLineString,
   slerpDistance?: number
 ) {
   const points: Vector3[] = [];
@@ -70,30 +69,15 @@ export function get3DObjectFromMultiLineString(
   return new LineSegments(geometry, material);
 }
 
-export function get3DObjectFromPolygon(
-  polygon: turf.Polygon,
-  fill: boolean = false
-) {
-  const points = polygon.coordinates[0].map((position) =>
-    lngLatAltToVector(position)
-  );
+export function get3DObjectFromPolygon(polygon: Polygon) {
+  return polygon.coordinates.map((coordinates) => {
+    const points = coordinates.map((position) => lngLatAltToVector(position));
 
-  if (fill) {
-    const { vertices, holes, dimensions } = earcut.flatten(polygon.coordinates);
-    const triangles = earcut(vertices, holes, dimensions);
-
-    const geometry = new BufferGeometry().setFromPoints(points);
-    geometry.setIndex(triangles);
-
-    const material = new LineBasicMaterial({ color: 0x0000ff });
-
-    return new Mesh(geometry, material);
-  } else {
     const geometry = new BufferGeometry().setFromPoints(points);
     const material = new LineBasicMaterial({ color: 0x0000ff });
 
     return new Line(geometry, material);
-  }
+  });
 }
 
 export function getPointOnLine(

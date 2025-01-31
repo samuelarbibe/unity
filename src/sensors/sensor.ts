@@ -8,6 +8,7 @@ export abstract class Sensor {
   }
 
   abstract generateProjections(
-    globe: THREE.Object3D
+    globe: THREE.Object3D,
+    samplingRate: number
   ): [THREE.Vector3, THREE.Vector3][];
 }

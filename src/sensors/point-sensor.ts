@@ -1,8 +1,9 @@
-import { destination, point, Point } from "@turf/turf";
+import { destination, point } from "@turf/turf";
 import * as THREE from "three";
 import { toRadians } from "@math.gl/core";
 import { Sensor } from "./sensor";
 import { geodeticSurfaceNormal, lngLatAltToVector } from "../utils/conversions";
+import { Point } from "geojson";
 
 export class PointSensor extends Sensor {
   constructor(

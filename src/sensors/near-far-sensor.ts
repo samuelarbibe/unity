@@ -1,4 +1,3 @@
-import { LineString } from "@turf/turf";
 import { get3DObjectFromLineString, getPointOnLine } from "../utils/3d";
 import * as THREE from "three";
 import { Sensor } from "./sensor";
@@ -7,19 +6,19 @@ import {
   geodeticSurfaceNormal,
   vectorOnGeodeticSurface,
 } from "../utils/conversions";
+import { LineString } from "geojson";
 
 export class NearFarSensor extends Sensor {
   constructor(
     private lane: LineString,
     private near: number,
-    private far: number,
-    private samplingRate: number
+    private far: number
   ) {
     super();
   }
 
-  generateProjections(globe: THREE.Object3D) {
-    const lineObject = get3DObjectFromLineString(this.lane, this.samplingRate);
+  generateProjections(globe: THREE.Object3D, samplingRate: number) {
+    const lineObject = get3DObjectFromLineString(this.lane, samplingRate);
     const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
     let nadir = new THREE.Vector3();
@@ -50,7 +49,7 @@ export class NearFarSensor extends Sensor {
       for (
         let depth = 0;
         depth <= this.far - this.near;
-        depth += this.samplingRate
+        depth += samplingRate
       ) {
         horizontalPos = horizontalPos
           .copy(crossVector)

@@ -1,9 +1,9 @@
-import { LineString } from "@turf/turf";
 import { get3DObjectFromLineString, getPointOnLine } from "../utils/3d";
 import * as THREE from "three";
 import { toRadians } from "@math.gl/core";
 import { Sensor } from "./sensor";
 import { geodeticSurfaceNormal } from "../utils/conversions";
+import { LineString } from "geojson";
 
 export class AngleSensor extends Sensor {
   constructor(

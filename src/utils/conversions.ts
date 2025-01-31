@@ -1,10 +1,10 @@
 import { Ellipsoid } from "@math.gl/geospatial";
 import { Vector3 } from "three";
-import * as turf from "@turf/turf";
 import { METERS_PER_UNIT } from "./consts";
+import { Position } from "geojson";
 
 export function lngLatAltToVector(
-  [lng = 0, lat = 0, alt = 0]: turf.Position,
+  [lng = 0, lat = 0, alt = 0]: Position,
   result: Vector3 = new Vector3()
 ) {
   const position = Ellipsoid.WGS84.cartographicToCartesian([lng, lat, alt]);
@@ -17,7 +17,7 @@ export function lngLatAltToVector(
 
 export function vectorToLngLatAlt(
   vector: Vector3,
-  result: turf.Position = [0, 0, 0]
+  result: Position = [0, 0, 0]
 ) {
   const position = Ellipsoid.WGS84.cartesianToCartographic([
     vector.x,

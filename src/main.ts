@@ -71,7 +71,7 @@ async function run() {
   const lebanonGeoJSON = mergePolygons(lebanonDistricts, 0.01);
   const lebanon = get3DObjectFromPolygon(lebanonGeoJSON.geometry);
 
-  scene.add(lebanon);
+  scene.add(...lebanon);
 
   // globe
   const dem = new DEM();
@@ -120,14 +120,21 @@ async function run() {
   );
   scene.add(lane1);
 
-  const sensor1 = new AngleSensor(
+  // const sensor1 = new AngleSensor(
+  //   laneGeoJSON.geometry,
+  //   10,
+  //   85,
+  //   0.3 * METERS_PER_KM,
+  //   0.1
+  // );
+
+  const sensor1 = new NearFarSensor(
     laneGeoJSON.geometry,
-    10,
-    85,
-    0.3 * METERS_PER_KM,
-    0.1
+    20 * METERS_PER_KM,
+    60 * METERS_PER_KM
   );
-  const simulation1 = new Simulation(globe, sensor1);
+
+  const simulation1 = new Simulation(globe, sensor1, 0.3 * METERS_PER_KM);
   simulation1.run(scene);
   //
 
@@ -145,10 +152,9 @@ async function run() {
   const sensor2 = new NearFarSensor(
     lane2GeoJSON.geometry,
     7 * METERS_PER_KM,
-    15 * METERS_PER_KM,
-    0.1 * METERS_PER_KM
+    45 * METERS_PER_KM
   );
-  const simulation2 = new Simulation(globe, sensor2);
+  const simulation2 = new Simulation(globe, sensor2, 0.5 * METERS_PER_KM);
   simulation2.run(scene);
   //
 
@@ -159,7 +165,7 @@ async function run() {
   scene.add(pointObject);
 
   const sensor3 = new PointSensor(point3.geometry, 0, 90, 20, 45, 0.5, 0.5);
-  const simulation3 = new Simulation(globe, sensor3);
+  const simulation3 = new Simulation(globe, sensor3, 1 * METERS_PER_KM);
   simulation3.run(scene);
   //
 
