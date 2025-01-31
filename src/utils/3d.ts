@@ -1,5 +1,6 @@
 import {
   BufferGeometry,
+  ColorRepresentation,
   Line,
   LineBasicMaterial,
   LineSegments,
@@ -69,12 +70,15 @@ export function get3DObjectFromMultiLineString(
   return new LineSegments(geometry, material);
 }
 
-export function get3DObjectFromPolygon(polygon: Polygon) {
+export function get3DObjectFromPolygon(
+  polygon: Polygon,
+  color: ColorRepresentation = 0x0000ff
+) {
   return polygon.coordinates.map((coordinates) => {
     const points = coordinates.map((position) => lngLatAltToVector(position));
 
     const geometry = new BufferGeometry().setFromPoints(points);
-    const material = new LineBasicMaterial({ color: 0x0000ff });
+    const material = new LineBasicMaterial({ color });
 
     return new Line(geometry, material);
   });

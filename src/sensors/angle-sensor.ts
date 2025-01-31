@@ -9,18 +9,13 @@ export class AngleSensor extends Sensor {
   constructor(
     private lane: LineString,
     private alpha: number,
-    private elevationAngle: number,
-    private verticalSamplingRate: number,
-    private horizontalSamplingRate: number
+    private elevationAngle: number
   ) {
     super();
   }
 
-  generateProjections(globe: THREE.Object3D) {
-    const lineObject = get3DObjectFromLineString(
-      this.lane,
-      this.verticalSamplingRate
-    );
+  generateProjections(globe: THREE.Object3D, samplingRate: number) {
+    const lineObject = get3DObjectFromLineString(this.lane, samplingRate);
     const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
     let nadir = new THREE.Vector3();
@@ -43,7 +38,7 @@ export class AngleSensor extends Sensor {
       for (
         let a = this.elevationAngle - this.alpha;
         a <= this.elevationAngle + this.alpha;
-        a += this.horizontalSamplingRate
+        a += samplingRate
       ) {
         lookDir = lookDir.copy(nadir).applyAxisAngle(movingDir, toRadians(-a));
         this.raycaster.set(currentPos, lookDir);

@@ -78,7 +78,7 @@ export class Simulation {
 
     if (footprint) {
       const footprintObjects = footprint.features.flatMap((polygon) =>
-        get3DObjectFromPolygon(polygon.geometry)
+        get3DObjectFromPolygon(polygon.geometry, 0xff0000)
       );
       scene.add(...footprintObjects);
     }

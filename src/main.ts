@@ -23,7 +23,6 @@ import {
   disposeBatchedBoundsTree,
   acceleratedRaycast,
 } from "three-mesh-bvh";
-import { AngleSensor } from "./sensors/angle-sensor.ts";
 import { NearFarSensor } from "./sensors/near-far-sensor.ts";
 import { PointSensor } from "./sensors/point-sensor.ts";
 
@@ -124,8 +123,6 @@ async function run() {
   //   laneGeoJSON.geometry,
   //   10,
   //   85,
-  //   0.3 * METERS_PER_KM,
-  //   0.1
   // );
 
   const sensor1 = new NearFarSensor(
@@ -164,8 +161,8 @@ async function run() {
 
   scene.add(pointObject);
 
-  const sensor3 = new PointSensor(point3.geometry, 0, 90, 20, 45, 0.5, 0.5);
-  const simulation3 = new Simulation(globe, sensor3, 1 * METERS_PER_KM);
+  const sensor3 = new PointSensor(point3.geometry, 0, 90, 20, 45);
+  const simulation3 = new Simulation(globe, sensor3, 0.5 * METERS_PER_KM);
   simulation3.run(scene);
   //
 

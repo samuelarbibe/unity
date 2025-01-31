@@ -4,6 +4,7 @@ import { toRadians } from "@math.gl/core";
 import { Sensor } from "./sensor";
 import { geodeticSurfaceNormal, lngLatAltToVector } from "../utils/conversions";
 import { Point } from "geojson";
+import { METERS_PER_KM } from "../utils/consts";
 
 export class PointSensor extends Sensor {
   constructor(
@@ -11,14 +12,12 @@ export class PointSensor extends Sensor {
     private startBearing: number,
     private endBearing: number,
     private alpha: number,
-    private elevationAngle: number,
-    private alphaSamplingRate: number,
-    private bearingSamplingRate: number
+    private elevationAngle: number
   ) {
     super();
   }
 
-  generateProjections(globe: THREE.Object3D) {
+  generateProjections(globe: THREE.Object3D, samplingRate: number) {
     const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
     const pointOnGround = point(this.point.coordinates.slice(0, 2));
@@ -39,7 +38,7 @@ export class PointSensor extends Sensor {
     for (
       let bearing = this.startBearing;
       bearing < this.endBearing;
-      bearing += this.bearingSamplingRate
+      bearing += samplingRate / METERS_PER_KM
     ) {
       bearingDir = bearingDir
         .copy(north)
@@ -51,7 +50,7 @@ export class PointSensor extends Sensor {
       for (
         let angle = this.elevationAngle - this.alpha;
         angle <= this.elevationAngle + this.alpha;
-        angle += this.alphaSamplingRate
+        angle += samplingRate / METERS_PER_KM
       ) {
         lookDir = lookDir
           .copy(nadir)
