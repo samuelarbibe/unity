@@ -1,103 +1,103 @@
+import type { LineString, MultiLineString, Point, Polygon } from "geojson";
 import {
-  BufferGeometry,
-  ColorRepresentation,
-  Line,
-  LineBasicMaterial,
-  LineSegments,
-  Mesh,
-  MeshBasicMaterial,
-  SphereGeometry,
-  Vector3,
+	BufferGeometry,
+	type ColorRepresentation,
+	Line,
+	LineBasicMaterial,
+	LineSegments,
+	Mesh,
+	MeshBasicMaterial,
+	SphereGeometry,
+	Vector3,
 } from "three";
-import { getVectorsFromCoordinates } from "./vectors";
-import { lngLatAltToVector } from "./conversions";
 import { METERS_PER_UNIT } from "./consts";
-import { LineString, MultiLineString, Point, Polygon } from "geojson";
+import { lngLatAltToVector } from "./conversions";
+import { getVectorsFromCoordinates } from "./vectors";
 
 export function get3DObjectFromPoint(point: Point) {
-  const vector = lngLatAltToVector(point.coordinates);
-  const geometry = new SphereGeometry(100 / METERS_PER_UNIT);
+	const vector = lngLatAltToVector(point.coordinates);
+	const geometry = new SphereGeometry(100 / METERS_PER_UNIT);
 
-  const material = new MeshBasicMaterial({
-    color: 0xff0000,
-  });
+	const material = new MeshBasicMaterial({
+		color: 0xff0000,
+	});
 
-  const mesh = new Mesh(geometry, material);
+	const mesh = new Mesh(geometry, material);
 
-  mesh.position.set(vector.x, vector.y, vector.z);
+	mesh.position.set(vector.x, vector.y, vector.z);
 
-  return mesh;
+	return mesh;
 }
 
 export function get3DObjectFromLineString(
-  lineString: LineString,
-  slerpDistance?: number
+	lineString: LineString,
+	slerpDistance?: number,
 ) {
-  const vectors = getVectorsFromCoordinates(lineString.coordinates, {
-    slerpDistance,
-  });
-  const geometry = new BufferGeometry().setFromPoints(vectors);
+	const vectors = getVectorsFromCoordinates(lineString.coordinates, {
+		slerpDistance,
+	});
+	const geometry = new BufferGeometry().setFromPoints(vectors);
 
-  const material = new LineBasicMaterial({
-    color: 0x00ff00,
-  });
+	const material = new LineBasicMaterial({
+		color: 0x00ff00,
+	});
 
-  return new Line(geometry, material);
+	return new Line(geometry, material);
 }
 
 export function get3DObjectFromMultiLineString(
-  multiLineString: MultiLineString,
-  slerpDistance?: number
+	multiLineString: MultiLineString,
+	slerpDistance?: number,
 ) {
-  const points: Vector3[] = [];
+	const points: Vector3[] = [];
 
-  multiLineString.coordinates.forEach((coordinates) => {
-    const vectors = getVectorsFromCoordinates(coordinates, {
-      stitchVectors: true,
-      slerpDistance,
-    });
-    points.push(...vectors);
-  });
+	for (const coordinates of multiLineString.coordinates) {
+		const vectors = getVectorsFromCoordinates(coordinates, {
+			stitchVectors: true,
+			slerpDistance,
+		});
+		points.push(...vectors);
+	}
 
-  const geometry = new BufferGeometry().setFromPoints(points);
+	const geometry = new BufferGeometry().setFromPoints(points);
 
-  const material = new LineBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.2,
-  });
+	const material = new LineBasicMaterial({
+		color: 0xffffff,
+		transparent: true,
+		opacity: 0.2,
+	});
 
-  return new LineSegments(geometry, material);
+	return new LineSegments(geometry, material);
 }
 
 export function get3DObjectFromPolygon(
-  polygon: Polygon,
-  color: ColorRepresentation = 0x0000ff
+	polygon: Polygon,
+	color: ColorRepresentation = 0x0000ff,
 ) {
-  return polygon.coordinates.map((coordinates) => {
-    const points = coordinates.map((position) => lngLatAltToVector(position));
+	return polygon.coordinates.map((coordinates) => {
+		const points = coordinates.map((position) => lngLatAltToVector(position));
 
-    const geometry = new BufferGeometry().setFromPoints(points);
-    const material = new LineBasicMaterial({ color });
+		const geometry = new BufferGeometry().setFromPoints(points);
+		const material = new LineBasicMaterial({ color });
 
-    return new Line(geometry, material);
-  });
+		return new Line(geometry, material);
+	});
 }
 
 export function getPointOnLine(
-  line: Line,
-  index: number,
-  result: Vector3 = new Vector3()
+	line: Line,
+	index: number,
+	result: Vector3 = new Vector3(),
 ) {
-  const dimensions = 3;
-  const points = Array.from(
-    line.geometry.attributes.position.array.slice(
-      dimensions * index,
-      dimensions * index + dimensions
-    )
-  );
+	const dimensions = 3;
+	const points = Array.from(
+		line.geometry.attributes.position.array.slice(
+			dimensions * index,
+			dimensions * index + dimensions,
+		),
+	);
 
-  result.set(points[0], points[1], points[2]);
+	result.set(points[0], points[1], points[2]);
 
-  return result;
+	return result;
 }
