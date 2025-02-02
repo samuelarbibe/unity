@@ -34,29 +34,31 @@ export class Simulation {
 	}
 
 	run(scene: THREE.Scene) {
+		console.time("projections");
 		const projections = this.sensor.generateProjections(
 			this.globe,
 			this.samplingRate,
 		);
+		console.timeEnd("projections");
 
 		// const projectionLinesPositions = projections.reduce<THREE.Vector3[]>(
-		//   (acc, curr) => {
-		//     acc.push(...curr);
-		//     return acc;
-		//   },
-		//   []
+		// 	(acc, curr) => {
+		// 		acc.push(...curr);
+		// 		return acc;
+		// 	},
+		// 	[],
 		// );
 
 		// const projectionGeometry = new THREE.BufferGeometry().setFromPoints(
-		//   projectionLinesPositions
+		// 	projectionLinesPositions,
 		// );
 		// const projectionMaterial = new THREE.LineBasicMaterial({
-		//   color: 0xff0000,
-		//   linewidth: 0.01,
+		// 	color: 0xff0000,
+		// 	linewidth: 0.01,
 		// });
 		// const projectionsObjects = new THREE.LineSegments(
-		//   projectionGeometry,
-		//   projectionMaterial
+		// 	projectionGeometry,
+		// 	projectionMaterial,
 		// );
 
 		// scene.add(projectionsObjects);
@@ -70,11 +72,11 @@ export class Simulation {
 		const hitObjects = new THREE.Points(hitGeometry, hitMaterial);
 		scene.add(hitObjects);
 
+		console.time("footprint");
 		const footprint = this.generateFootprint(
 			hitPositions.map((position) => vectorToLngLatAlt(position).slice(0, 2)),
 		);
-
-		console.log(footprint);
+		console.timeEnd("footprint");
 
 		if (footprint) {
 			const footprintObjects = footprint.features.flatMap((polygon) =>

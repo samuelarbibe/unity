@@ -1,11 +1,8 @@
-import type { LineString } from "geojson";
+import { bearing, destination } from "@turf/turf";
+import type { LineString, Position } from "geojson";
 import * as THREE from "three";
-import { get3DObjectFromLineString, getPointOnLine } from "../utils/3d";
-import { METERS_PER_UNIT } from "../utils/consts";
-import {
-	geodeticSurfaceNormal,
-	vectorOnGeodeticSurface,
-} from "../utils/conversions";
+import { lngLatAltToVector, vectorToLngLatAlt } from "../utils/conversions";
+import { getVectorsFromCoordinates } from "../utils/vectors";
 import { Sensor } from "./sensor";
 
 export class NearFarSensor extends Sensor {
@@ -18,45 +15,40 @@ export class NearFarSensor extends Sensor {
 	}
 
 	generateProjections(globe: THREE.Object3D, samplingRate: number) {
-		const lineObject = get3DObjectFromLineString(this.lane, samplingRate);
-		const projections: [THREE.Vector3, THREE.Vector3][] = [];
-
-		let nadir = new THREE.Vector3();
-		let nextPos = new THREE.Vector3();
+		let currentBearing = 0;
 		let currentPos = new THREE.Vector3();
-		let movingDir = new THREE.Vector3();
 		let lookDir = new THREE.Vector3();
-		const crossVector = new THREE.Vector3();
-		const near = new THREE.Vector3();
-		let horizontalPos = new THREE.Vector3();
+		let horizontalPos: Position = [0, 0];
 		let horizontalPosOnSurface = new THREE.Vector3();
 
-		for (
-			let i = 0;
-			i < lineObject.geometry.attributes.position.count - 1;
-			i++
-		) {
-			currentPos = getPointOnLine(lineObject, i, currentPos);
-			nextPos = getPointOnLine(lineObject, i + 1, nextPos);
+		const projections: [THREE.Vector3, THREE.Vector3][] = [];
 
-			movingDir = movingDir.copy(nextPos).sub(currentPos).normalize();
+		const vectors = getVectorsFromCoordinates(this.lane.coordinates, {
+			slerpDistance: samplingRate,
+		});
 
-			nadir = geodeticSurfaceNormal(currentPos).negate();
-			crossVector.crossVectors(nadir, movingDir).normalize();
+		const lanePositions = vectors.map((vector) => vectorToLngLatAlt(vector));
 
-			near.copy(crossVector).multiplyScalar(this.near / METERS_PER_UNIT);
+		for (let i = 0; i < lanePositions.length; i++) {
+			currentPos = vectors[i];
+			const lanePosition = lanePositions[i];
+			const nextLanePosition = lanePositions[i + 1];
 
-			for (
-				let depth = 0;
-				depth <= this.far - this.near;
-				depth += samplingRate
-			) {
-				horizontalPos = horizontalPos
-					.copy(crossVector)
-					.multiplyScalar((this.near + depth) / METERS_PER_UNIT)
-					.add(currentPos);
+			currentBearing = nextLanePosition
+				? bearing(lanePosition, nextLanePosition)
+				: currentBearing;
 
-				horizontalPosOnSurface = vectorOnGeodeticSurface(
+			for (let depth = this.near; depth <= this.far; depth += samplingRate) {
+				horizontalPos = destination(
+					lanePosition.slice(0, 2),
+					depth,
+					currentBearing + 90,
+					{
+						units: "meters",
+					},
+				).geometry.coordinates;
+
+				horizontalPosOnSurface = lngLatAltToVector(
 					horizontalPos,
 					horizontalPosOnSurface,
 				);
