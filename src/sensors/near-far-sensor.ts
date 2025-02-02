@@ -1,29 +1,28 @@
 import { bearing, destination } from "@turf/turf";
 import type { LineString, Position } from "geojson";
-import * as THREE from "three";
 import { lngLatAltToVector, vectorToLngLatAlt } from "../utils/conversions";
 import { getVectorsFromCoordinates } from "../utils/vectors";
 import { Sensor } from "./sensor";
+import { type Object3D, Vector3 } from "three";
 
 export class NearFarSensor extends Sensor {
 	constructor(
-		private lane: LineString,
 		private near: number,
 		private far: number,
 	) {
 		super();
 	}
 
-	generateProjections(globe: THREE.Object3D, samplingRate: number) {
+	generateProjections(globe: Object3D, lane: LineString, samplingRate: number) {
 		let currentBearing = 0;
-		let currentPos = new THREE.Vector3();
-		let lookDir = new THREE.Vector3();
+		let currentPos = new Vector3();
+		let lookDir = new Vector3();
 		let horizontalPos: Position = [0, 0];
-		let horizontalPosOnSurface = new THREE.Vector3();
+		let horizontalPosOnSurface = new Vector3();
 
-		const projections: [THREE.Vector3, THREE.Vector3][] = [];
+		const projections: [Vector3, Vector3][] = [];
 
-		const vectors = getVectorsFromCoordinates(this.lane.coordinates, {
+		const vectors = getVectorsFromCoordinates(lane.coordinates, {
 			slerpDistance: samplingRate,
 		});
 

@@ -1,14 +1,17 @@
-import * as THREE from "three";
+import { Raycaster, type Object3D } from "three";
+import type { Projection } from "../types";
+import type { LineString } from "geojson";
 
 export abstract class Sensor {
-	protected raycaster: THREE.Raycaster;
+	protected raycaster: Raycaster;
 
 	constructor() {
-		this.raycaster = new THREE.Raycaster();
+		this.raycaster = new Raycaster();
 	}
 
 	abstract generateProjections(
-		globe: THREE.Object3D,
+		globe: Object3D,
+		lane: LineString,
 		samplingRate: number,
-	): [THREE.Vector3, THREE.Vector3][];
+	): Projection[];
 }

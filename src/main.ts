@@ -1,9 +1,9 @@
 import "./style.css";
 import { lineString } from "@turf/turf";
-import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import lebanonDistricts from "../data/lebanon.ts";
+import israelDistricts from "../data/israel.ts";
 import { DEM } from "./dem.ts";
 import { GlobeGeometry } from "./globe.ts";
 import { Simulation } from "./simulation.ts";
@@ -23,29 +23,41 @@ import {
 	disposeBoundsTree,
 } from "three-mesh-bvh";
 import { NearFarSensor } from "./sensors/near-far-sensor.ts";
+import {
+	BufferGeometry,
+	Mesh,
+	BatchedMesh,
+	Object3D,
+	Vector3,
+	WebGLRenderer,
+	Scene,
+	PerspectiveCamera,
+	MeshBasicMaterial,
+	BackSide,
+	AxesHelper,
+} from "three";
 
-// Add the extension functions
-THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
-THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-THREE.Mesh.prototype.raycast = acceleratedRaycast;
+BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+Mesh.prototype.raycast = acceleratedRaycast;
 
-THREE.BatchedMesh.prototype.computeBoundsTree = computeBatchedBoundsTree;
-THREE.BatchedMesh.prototype.disposeBoundsTree = disposeBatchedBoundsTree;
-THREE.BatchedMesh.prototype.raycast = acceleratedRaycast;
+BatchedMesh.prototype.computeBoundsTree = computeBatchedBoundsTree;
+BatchedMesh.prototype.disposeBoundsTree = disposeBatchedBoundsTree;
+BatchedMesh.prototype.raycast = acceleratedRaycast;
 
 async function run() {
-	THREE.Object3D.DEFAULT_UP = new THREE.Vector3(0, 0, 1);
+	Object3D.DEFAULT_UP = new Vector3(0, 0, 1);
 
 	const canvas = document.querySelector<HTMLDivElement>("#app");
-	const renderer = new THREE.WebGLRenderer();
+	const renderer = new WebGLRenderer();
 
 	canvas?.appendChild(renderer.domElement);
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
-	const scene = new THREE.Scene();
+	const scene = new Scene();
 
 	// camera
-	const camera = new THREE.PerspectiveCamera(
+	const camera = new PerspectiveCamera(
 		70,
 		window.innerWidth / window.innerHeight,
 		0.1,
@@ -70,6 +82,12 @@ async function run() {
 
 	scene.add(...lebanon);
 
+	// israel
+	const israelGeoJSON = mergePolygons(israelDistricts, 0.01);
+	const israel = get3DObjectFromPolygon(israelGeoJSON.geometry);
+
+	scene.add(...israel);
+
 	// globe
 	const dem = new DEM();
 	await dem.loadFromFile("DEM.tif");
@@ -86,17 +104,17 @@ async function run() {
 
 	globeGeometry.computeBoundsTree();
 
-	const globeMaterial = new THREE.MeshBasicMaterial({
+	const globeMaterial = new MeshBasicMaterial({
 		color: 0x333333,
 		wireframe: true,
 		wireframeLinewidth: 0.5,
-		side: THREE.BackSide,
+		side: BackSide,
 	});
-	const globe = new THREE.Mesh(globeGeometry, globeMaterial);
+	const globe = new Mesh(globeGeometry, globeMaterial);
 	scene.add(globe);
 
 	// axes
-	const axesHelper = new THREE.AxesHelper(lngLatAltToVector([0, 0, 0]).x);
+	const axesHelper = new AxesHelper(lngLatAltToVector([0, 0, 0]).x);
 	scene.add(axesHelper);
 
 	window.addEventListener("resize", () => {
@@ -107,7 +125,7 @@ async function run() {
 	});
 
 	// simulation 1
-	const laneGeoJSON = lineString([
+	const lane1 = lineString([
 		[35.51095430508093, 33.673002063560915, 6000],
 		[35.69351578066684, 34.07629374380497, 5000],
 		[35.768496386711234, 34.057389853489184, 5000],
@@ -118,59 +136,27 @@ async function run() {
 		[35.73263609686518, 33.64043936961592, 3000],
 		[35.814136755608956, 33.62143877545209, 3000],
 		[35.98691815214653, 33.96821473191116, 3000],
-	]);
-	const lane1 = get3DObjectFromLineString(
-		laneGeoJSON.geometry,
-		METERS_PER_KM * 1,
+	]).geometry;
+
+	const lane2 = lineString([
+		[35.89286826006881, 34.22606422742426, 12000],
+		[35.94436596761591, 34.31826944007152, 12000],
+	]).geometry;
+	const lane1Object = get3DObjectFromLineString(lane1, METERS_PER_KM * 1);
+	const lane2Object = get3DObjectFromLineString(lane2, METERS_PER_KM * 1);
+	scene.add(lane1Object);
+	scene.add(lane2Object);
+
+	const sensor1 = new NearFarSensor(-5 * METERS_PER_KM, 5 * METERS_PER_KM);
+
+	const simulation1 = new Simulation(
+		globe,
+		sensor1,
+		[lane1, lane2],
+		0.5 * METERS_PER_KM,
 	);
-	scene.add(lane1);
-
-	// const sensor1 = new AngleSensor(
-	//   laneGeoJSON.geometry,
-	//   10,
-	//   85,
-	// );
-
-	const sensor1 = new NearFarSensor(
-		laneGeoJSON.geometry,
-		-5 * METERS_PER_KM,
-		5 * METERS_PER_KM,
-	);
-
-	const simulation1 = new Simulation(globe, sensor1, 0.5 * METERS_PER_KM);
 	simulation1.run(scene);
 	//
-
-	// // simulation 2
-	// const lane2GeoJSON = lineString([
-	// 	[35.872580014743505, 34.12832462549051, 5000],
-	// 	[35.875549597317956, 34.19473037685394, 5000],
-	// ]);
-	// const lane2 = get3DObjectFromLineString(
-	// 	lane2GeoJSON.geometry,
-	// 	METERS_PER_KM * 1,
-	// );
-	// scene.add(lane2);
-
-	// const sensor2 = new NearFarSensor(
-	// 	lane2GeoJSON.geometry,
-	// 	7 * METERS_PER_KM,
-	// 	45 * METERS_PER_KM,
-	// );
-	// const simulation2 = new Simulation(globe, sensor2, 0.5 * METERS_PER_KM);
-	// simulation2.run(scene);
-	// //
-
-	// // simulation 3
-	// const point3 = point([35.78206410711991, 34.15878030223702, 3000]);
-	// const pointObject = get3DObjectFromPoint(point3.geometry);
-
-	// scene.add(pointObject);
-
-	// const sensor3 = new PointSensor(point3.geometry, 0, 90, 20, 45);
-	// const simulation3 = new Simulation(globe, sensor3, 0.5 * METERS_PER_KM);
-	// simulation3.run(scene);
-	// //
 
 	function animate() {
 		requestAnimationFrame(animate);

@@ -1,28 +1,27 @@
 import { toRadians } from "@math.gl/core";
 import type { LineString } from "geojson";
-import * as THREE from "three";
 import { get3DObjectFromLineString, getPointOnLine } from "../utils/3d";
 import { geodeticSurfaceNormal } from "../utils/conversions";
 import { Sensor } from "./sensor";
+import { type Object3D, Vector3 } from "three";
 
 export class AngleSensor extends Sensor {
 	constructor(
-		private lane: LineString,
 		private alpha: number,
 		private elevationAngle: number,
 	) {
 		super();
 	}
 
-	generateProjections(globe: THREE.Object3D, samplingRate: number) {
-		const lineObject = get3DObjectFromLineString(this.lane, samplingRate);
-		const projections: [THREE.Vector3, THREE.Vector3][] = [];
+	generateProjections(globe: Object3D, lane: LineString, samplingRate: number) {
+		const lineObject = get3DObjectFromLineString(lane, samplingRate);
+		const projections: [Vector3, Vector3][] = [];
 
-		let nadir = new THREE.Vector3();
-		let nextPos = new THREE.Vector3();
-		let currentPos = new THREE.Vector3();
-		let movingDir = new THREE.Vector3();
-		let lookDir = new THREE.Vector3();
+		let nadir = new Vector3();
+		let nextPos = new Vector3();
+		let currentPos = new Vector3();
+		let movingDir = new Vector3();
+		let lookDir = new Vector3();
 
 		for (
 			let i = 0;
