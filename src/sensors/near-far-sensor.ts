@@ -1,4 +1,4 @@
-import { bearing, destination } from "@turf/turf";
+import { rhumbBearing, rhumbDestination } from "@turf/turf";
 import type { LineString, Position } from "geojson";
 import { lngLatAltToVector, vectorToLngLatAlt } from "../utils/conversions";
 import { getVectorsFromCoordinates } from "../utils/vectors";
@@ -34,11 +34,11 @@ export class NearFarSensor extends Sensor {
 			const nextLanePosition = lanePositions[i + 1];
 
 			currentBearing = nextLanePosition
-				? bearing(lanePosition, nextLanePosition)
+				? rhumbBearing(lanePosition, nextLanePosition)
 				: currentBearing;
 
 			for (let depth = this.near; depth <= this.far; depth += samplingRate) {
-				horizontalPos = destination(
+				horizontalPos = rhumbDestination(
 					lanePosition.slice(0, 2),
 					depth,
 					currentBearing + 90,
