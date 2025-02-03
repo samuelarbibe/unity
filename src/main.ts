@@ -3,7 +3,6 @@ import { lineString } from "@turf/turf";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import lebanonDistricts from "../data/lebanon.ts";
-import israelDistricts from "../data/israel.ts";
 import { DEM } from "./dem.ts";
 import { GlobeGeometry } from "./globe.ts";
 import { Simulation } from "./simulation.ts";
@@ -53,6 +52,7 @@ async function run() {
 
 	canvas?.appendChild(renderer.domElement);
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setPixelRatio(window.devicePixelRatio * 0.5);
 
 	const scene = new Scene();
 
@@ -81,12 +81,6 @@ async function run() {
 	const lebanon = get3DObjectFromPolygon(lebanonGeoJSON.geometry);
 
 	scene.add(...lebanon);
-
-	// israel
-	const israelGeoJSON = mergePolygons(israelDistricts, 0.01);
-	const israel = get3DObjectFromPolygon(israelGeoJSON.geometry);
-
-	scene.add(...israel);
 
 	// globe
 	const dem = new DEM();
@@ -126,34 +120,20 @@ async function run() {
 
 	// simulation 1
 	const lane1 = lineString([
-		[35.51095430508093, 33.673002063560915, 6000],
-		[35.69351578066684, 34.07629374380497, 5000],
-		[35.768496386711234, 34.057389853489184, 5000],
-		[35.58593491112532, 33.66214920138623, 5000],
-		[35.65765549082076, 33.64315339804318, 4000],
-		[35.8402169664067, 34.027675220536295, 4000],
-		[35.915197572451035, 33.99254450748603, 4000],
-		[35.73263609686518, 33.64043936961592, 3000],
-		[35.814136755608956, 33.62143877545209, 3000],
-		[35.98691815214653, 33.96821473191116, 3000],
+		[34.9, 33.033333, 12_192],
+		[35.55, 34.566667, 12_192],
 	]).geometry;
 
-	const lane2 = lineString([
-		[35.89286826006881, 34.22606422742426, 12000],
-		[35.94436596761591, 34.31826944007152, 12000],
-	]).geometry;
 	const lane1Object = get3DObjectFromLineString(lane1, METERS_PER_KM * 1);
-	const lane2Object = get3DObjectFromLineString(lane2, METERS_PER_KM * 1);
 	scene.add(lane1Object);
-	scene.add(lane2Object);
 
-	const sensor1 = new NearFarSensor(-5 * METERS_PER_KM, 5 * METERS_PER_KM);
+	const sensor1 = new NearFarSensor(34 * METERS_PER_KM, 112 * METERS_PER_KM);
 
 	const simulation1 = new Simulation(
 		globe,
 		sensor1,
-		[lane1, lane2],
-		0.5 * METERS_PER_KM,
+		[lane1],
+		1 * METERS_PER_KM,
 	);
 	simulation1.run(scene);
 	//
