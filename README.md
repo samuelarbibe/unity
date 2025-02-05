@@ -1,32 +1,33 @@
-# Unity - [demo](https://unity-eta.vercel.app/)
-> Airborne sensor projection simulator
+# [Unity - Airborne Sensor Projection Simulator](https://unity-eta.vercel.app)
 
-Unity is an Airborne/Satellite sensor projection simulator.  
-It can be used to simulate the projected vieweing polygon on the surface of the earth, given a set of sensor paremeters.  
+Unity is an airborne/satellite sensor projection simulator designed to model the projected viewing polygon on the Earth’s surface based on specified sensor parameters.  
 
-### How does it work?
-Unity uses [Three.js](https://threejs.org/) to perform rendering and vector manipulation.  
-For every given camera position, Unity "sends" an array of vectors to the surface of the earth, and creates a[Frustum](https://en.wikipedia.org/wiki/Frustum):  
-![image](https://github.com/samuelarbibe/unity/assets/38098325/e7b147dd-d1bd-4c4e-bea3-ba60ccc763ad)  
-This frsutum's vectors are then intersected with the earth's surface using Three.js' [Raycaster](https://threejs.org/docs/index.html?q=rayca#api/en/core/Raycaster) helper.
+## Features
+-	**3D Visualization**: Utilizes Three.js for rendering and vector manipulation to represent the sensor’s field of view and footprint on the ground.
+-	**Accurate Earth Representation**: Employs math.gl to construct a WGS84-compatible Earth ellipsoid, ensuring precise geodetic calculations.
+-	**DEM**: Can receive a DEM in geotiff format to create more accurate predictions.
+-	**Adjustable Sampling Rates**: Allows customization of Earth’s surface resolution and sampling rates to balance between accuracy and performance.
+-	**Airborne Sensing Strategies**: Simulates multiple sensing strategies, like near-far, and elevation angle and [AOV](https://en.wikipedia.org/wiki/Angle_of_view_%28photography%29).
+-	**Path Interpolation**: Accounts for Earth’s curvature by spherically linearly interpolating [SLERP](https://en.wikipedia.org/wiki/Slerp) input paths provided as GeoJSON LineStrings.
 
-### Accuracy
-Unity uses [math.gl](https://uber-web.github.io/math.gl/) to build a WGS84 compatible earth ellipsoid:  
-![image](https://github.com/samuelarbibe/unity/assets/38098325/c7754968-ac35-4d98-a7a3-814e250551cd)  
-And calculates according to the WGS84 geodetic coordinates (`[X, Y, Z]`)
+## How It Works
+### 1. Earth Surface Generation
+ Creates the earth's surface mesh for a specified bbox, based on a WGS84 ellipsoid + DEM.  
+<img alt="Earth Surface" src="https://github.com/user-attachments/assets/98a805eb-7514-4929-8e2c-60f99d91748a" />  
+<img alt="Screenshot 2025-02-05 at 15 49 09" src="https://github.com/user-attachments/assets/48bad10e-1292-47f5-aae7-2eb5ea81dca6" />  
+### 2. Lane Interpolation
+Interpolates the given geoJSON lanes using [SLERP](https://en.wikipedia.org/wiki/Slerp).  
+<img alt="Lane Interpolation" src="https://github.com/user-attachments/assets/1d240345-a788-4c5d-922f-c789034ad999" />  
+### 3. FOV Simulation
+For a given sampling rate, and according to the configured sensor, Unity generates an array of vectors directed towards the Earth’s surface within the sensor's calculated FOV.  
+<img alt="Screenshot 2025-02-05 at 15 53 00" src="https://github.com/user-attachments/assets/ee60581d-1d23-464d-aafb-397eb783ab51" />  
+### 4. Footpring Calculation
+using Three.js' [Raycaster](https://threejs.org/docs/#api/en/core/Raycaster), hit points are calculated on earth's surface mesh, and converted to cartographic coordinates.  
+<img alt="Screenshot 2025-02-05 at 15 53 00" src="https://github.com/user-attachments/assets/c8ed6e9f-d315-4850-a963-d45995a6f4ab" />  
+### 5. Footprint GeoJSON
+Converts all the hit points into a single `FeatureCollection<Polygon>` that can be projected onto a map, using turf's [concave hull](https://turfjs.org/docs/api/concave).  
+<img alt="Screenshot 2025-02-05 at 15 55 06" src="https://github.com/user-attachments/assets/4f800509-d610-47ef-855e-85b3a179995f" />  
 
-#### Earth's surface resolution
-The accuracy is also affected by the earth's surface resolution, that can be fine-tuned according to the need.  
-<img width="872" alt="Screenshot 2023-10-04 at 21 30 37" src="https://github.com/samuelarbibe/unity/assets/38098325/ef949f29-6f3d-4f59-8d56-6a7dfaea0a3e">  
-<img width="1077" alt="Screenshot 2023-10-04 at 21 30 24" src="https://github.com/samuelarbibe/unity/assets/38098325/3f15f267-8514-4cc3-a315-c3110ec76fff">
-
-#### Sampling rate
-The sampling rate can also be modified. For example:  
-<img width="424" alt="Screenshot 2023-10-04 at 21 34 00" src="https://github.com/samuelarbibe/unity/assets/38098325/fe36e732-df1e-4701-a32a-c9176f4a9e82">  
-<img width="425" alt="Screenshot 2023-10-04 at 21 34 07" src="https://github.com/samuelarbibe/unity/assets/38098325/c2e66454-5280-4a5c-a830-24b92e7ef7b5">  
-
-#### accounting for path curvature
-The given path, inputed as a GeoJSON LineString, is Spherically Linearly Interpolated ([SLERP](https://en.wikipedia.org/wiki/Slerp#:~:text=In%20computer%20graphics%2C%20Slerp%20is,purpose%20of%20animating%203D%20rotation.))  According to earth's curvature.  
-This interpolation can be performed at a given rate.  
-<img width="1082" alt="Screenshot 2023-10-04 at 21 11 34" src="https://github.com/samuelarbibe/unity/assets/38098325/18d065cc-ddc1-4e6c-86da-8fd0f5fb19aa">
-
+## Accuracy Considerations
+-	**Surface Resolution**: The simulator’s accuracy is influenced by the Earth’s surface resolution, which can be fine-tuned as needed.
+-	**Sampling Rate**: The sampling rate is adjustable to balance between performance and precision.
