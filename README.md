@@ -23,7 +23,7 @@ For a given sampling rate, and according to the configured sensor, Unity generat
 <img alt="Screenshot 2025-02-05 at 15 53 00" src="https://github.com/user-attachments/assets/ee60581d-1d23-464d-aafb-397eb783ab51" />  
 ### 4. Footpring Calculation
 using Three.js' [Raycaster](https://threejs.org/docs/#api/en/core/Raycaster), hit points are calculated on earth's surface mesh, and converted to cartographic coordinates.  
-<img alt="Screenshot 2025-02-05 at 15 53 00" src="https://github.com/user-attachments/assets/c8ed6e9f-d315-4850-a963-d45995a6f4ab" />  
+<img alt="Screenshot 2025-02-05 at 15 53 24" src="https://github.com/user-attachments/assets/22a16023-d49e-4fea-8527-9cb3fc3dbd08" />  
 ### 5. Footprint GeoJSON
 Converts all the hit points into a single `FeatureCollection<Polygon>` that can be projected onto a map, using turf's [concave hull](https://turfjs.org/docs/api/concave).  
 <img alt="Screenshot 2025-02-05 at 15 55 06" src="https://github.com/user-attachments/assets/4f800509-d610-47ef-855e-85b3a179995f" />  
