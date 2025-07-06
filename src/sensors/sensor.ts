@@ -1,6 +1,6 @@
-import { Raycaster, type Object3D } from "three";
-import type { Projection } from "../types";
 import type { LineString } from "geojson";
+import { type Object3D, Raycaster } from "three";
+import type { Projection } from "../types";
 
 export abstract class Sensor {
 	protected raycaster: Raycaster;

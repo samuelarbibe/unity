@@ -15,6 +15,19 @@ import { lngLatAltToVector } from "./utils/conversions.ts";
 import { mergePolygons } from "./utils/geometry.ts";
 
 import {
+	AxesHelper,
+	BackSide,
+	BatchedMesh,
+	BufferGeometry,
+	Mesh,
+	MeshBasicMaterial,
+	Object3D,
+	PerspectiveCamera,
+	Scene,
+	Vector3,
+	WebGLRenderer,
+} from "three";
+import {
 	acceleratedRaycast,
 	computeBatchedBoundsTree,
 	computeBoundsTree,
@@ -22,19 +35,7 @@ import {
 	disposeBoundsTree,
 } from "three-mesh-bvh";
 import { NearFarSensor } from "./sensors/near-far-sensor.ts";
-import {
-	BufferGeometry,
-	Mesh,
-	BatchedMesh,
-	Object3D,
-	Vector3,
-	WebGLRenderer,
-	Scene,
-	PerspectiveCamera,
-	MeshBasicMaterial,
-	BackSide,
-	AxesHelper,
-} from "three";
+import { PointSensor } from "./sensors/point-sensor.ts";
 
 BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -124,10 +125,16 @@ async function run() {
 		[35.55, 34.566667, 12_192],
 	]).geometry;
 
+	const centerCoords = [35.67116555428541, 33.81262792977587];
+
 	const lane1Object = get3DObjectFromLineString(lane1, METERS_PER_KM * 1);
 	scene.add(lane1Object);
 
-	const sensor1 = new NearFarSensor(34 * METERS_PER_KM, 112 * METERS_PER_KM);
+	const sensor1 = new PointSensor(
+		centerCoords,
+		10 * METERS_PER_KM,
+		10 * METERS_PER_KM,
+	);
 
 	const simulation1 = new Simulation(
 		globe,
@@ -136,7 +143,6 @@ async function run() {
 		1 * METERS_PER_KM,
 	);
 	simulation1.run(scene);
-	//
 
 	function animate() {
 		requestAnimationFrame(animate);

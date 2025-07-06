@@ -1,9 +1,9 @@
 import { toRadians } from "@math.gl/core";
 import type { LineString } from "geojson";
+import { type Object3D, Vector3 } from "three";
 import { get3DObjectFromLineString, getPointOnLine } from "../utils/3d";
 import { geodeticSurfaceNormal } from "../utils/conversions";
 import { Sensor } from "./sensor";
-import { type Object3D, Vector3 } from "three";
 
 export class AngleSensor extends Sensor {
 	constructor(

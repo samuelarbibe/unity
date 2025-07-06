@@ -1,9 +1,9 @@
 import { rhumbBearing, rhumbDestination } from "@turf/turf";
 import type { LineString, Position } from "geojson";
+import { type Object3D, Vector3 } from "three";
 import { lngLatAltToVector, vectorToLngLatAlt } from "../utils/conversions";
 import { getVectorsFromCoordinates } from "../utils/vectors";
 import { Sensor } from "./sensor";
-import { type Object3D, Vector3 } from "three";
 
 export class NearFarSensor extends Sensor {
 	constructor(
