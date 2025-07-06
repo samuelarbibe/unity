@@ -3,6 +3,7 @@ import {
 	BufferGeometry,
 	type ColorRepresentation,
 	Line,
+	Line3,
 	LineBasicMaterial,
 	LineSegments,
 	Mesh,
@@ -100,4 +101,33 @@ export function getPointOnLine(
 	result.set(points[0], points[1], points[2]);
 
 	return result;
+}
+
+export function findClosestPointOnLine(line: Line, point: Vector3): Vector3 {
+	const geometry = line.geometry as BufferGeometry;
+	const positions = geometry.attributes.position;
+	const count = positions.count;
+
+	const closestPoint = new Vector3();
+	let minDistanceSq = Number.POSITIVE_INFINITY;
+
+	const a = new Vector3();
+	const b = new Vector3();
+	const tempClosest = new Vector3();
+
+	for (let i = 0; i < count - 1; i++) {
+		a.fromBufferAttribute(positions, i);
+		b.fromBufferAttribute(positions, i + 1);
+
+		const segment = new Line3(a, b);
+		segment.closestPointToPoint(point, true, tempClosest);
+
+		const distSq = tempClosest.distanceToSquared(point);
+		if (distSq < minDistanceSq) {
+			minDistanceSq = distSq;
+			closestPoint.copy(tempClosest);
+		}
+	}
+
+	return closestPoint;
 }
